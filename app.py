@@ -4,12 +4,12 @@ from icalendar import Calendar, Event
 from datetime import datetime
 from io import BytesIO
 
-# Streamlit Web App
+# Titel der App
 st.title("Kunden Geburtstags-ICS Datei Generator")
 
 # Button zur Auslösung des Prozesses
 if st.button('Geburtstagsdaten aktualisieren und ICS-Datei generieren'):
-    # API Aufruf (Beispiel-API-URL und Header)
+    # Beispiel-API-URL und Header (passen Sie diese an Ihre API an)
     api_url = "https://api.tarif590.ch/kunden"  # Beispiel-URL
     headers = {"Authorization": "Bearer YOUR_API_TOKEN"}  # Ersetzen Sie dies mit Ihrem API-Token
     response = requests.get(api_url, headers=headers)
