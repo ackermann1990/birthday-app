@@ -12,19 +12,23 @@ def clean_column_names(columns):
 def detect_columns(data):
     cleaned_columns = clean_column_names(data.columns)
     
-    name_columns = [col for col in cleaned_columns if re.search(r'vorname|nachname|name', col)]
+    name_columns = [col for col in cleaned_columns if re.search(r'vorname', col)]
+    surname_columns = [col for col in cleaned_columns if re.search(r'nachname|name|firma', col) and 'vorname' not in col]
     birthdate_columns = [col for col in cleaned_columns if re.search(r'geburt|birth', col)]
     
     detected = {
-        'name': None,
+        'firstname': None,
+        'lastname': None,
         'birthdate': None
     }
     
-    # Kombiniere Vorname und Nachname oder verwende nur "Name"
-    if len(name_columns) >= 2:
-        detected['name'] = name_columns
-    elif len(name_columns) == 1:
-        detected['name'] = name_columns[0]
+    # Verwende den gefundenen Vornamen
+    if len(name_columns) >= 1:
+        detected['firstname'] = name_columns[0]
+    
+    # Verwende den gefundenen Nachnamen
+    if len(surname_columns) >= 1:
+        detected['lastname'] = surname_columns[0]
     
     # Verwende das Geburtsdatum
     if len(birthdate_columns) >= 1:
@@ -38,13 +42,11 @@ def process_data(data, columns):
     data.columns = clean_column_names(data.columns)
     
     # Debugging-Ausgabe
-    st.write("Erkannte Spalten für Namen:", columns['name'])
+    st.write("Erkannte Spalten für Vorname:", columns['firstname'])
+    st.write("Erkannte Spalte für Nachname:", columns['lastname'])
     st.write("Erkannte Spalte für Geburtsdatum:", columns['birthdate'])
     
-    if isinstance(columns['name'], list):
-        data['Name'] = data[columns['name'][0]].astype(str) + ' ' + data[columns['name'][1]].astype(str)
-    else:
-        data['Name'] = data[columns['name']].astype(str)
+    data['Name'] = data[columns['firstname']].astype(str) + ' ' + data[columns['lastname']].astype(str)
     
     data['Geburtsdatum'] = pd.to_datetime(data[columns['birthdate']], errors='coerce')
     data.dropna(subset=['Geburtsdatum'], inplace=True)  # Entfernt Zeilen mit ungültigen Geburtsdaten
@@ -87,8 +89,8 @@ if uploaded_file is not None:
         detected_columns = detect_columns(df)
 
         # Überprüfen, ob die notwendigen Spalten erkannt wurden
-        if detected_columns['name'] is not None and detected_columns['birthdate'] is not None:
-            st.success(f"Gefundene Spalten: Name = {detected_columns['name']}, Geburtsdatum = {detected_columns['birthdate']}")
+        if detected_columns['firstname'] is not None and detected_columns['lastname'] is not None and detected_columns['birthdate'] is not None:
+            st.success(f"Gefundene Spalten: Vorname = {detected_columns['firstname']}, Nachname = {detected_columns['lastname']}, Geburtsdatum = {detected_columns['birthdate']}")
             
             try:
                 # Outlook-kompatible CSV erstellen
@@ -111,3 +113,4 @@ if uploaded_file is not None:
             st.error('Die notwendigen Spalten konnten nicht automatisch erkannt werden. Bitte stellen Sie sicher, dass Vor- und Nachname sowie Geburtsdatum in der Datei enthalten sind.')
     except Exception as e:
         st.error(f"Ein Fehler ist beim Laden der Datei aufgetreten: {e}")
+
