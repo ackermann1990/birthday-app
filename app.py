@@ -29,6 +29,10 @@ def detect_columns(data):
 
 # Funktion zur Verarbeitung der Daten
 def process_data(data, columns):
+    # Debugging-Ausgabe
+    st.write("Erkannte Spalten für Namen:", columns['name'])
+    st.write("Erkannte Spalte für Geburtsdatum:", columns['birthdate'])
+    
     if isinstance(columns['name'], list):
         data['Name'] = data[columns['name'][0]].astype(str) + ' ' + data[columns['name'][1]].astype(str)
     else:
@@ -66,24 +70,29 @@ if uploaded_file is not None:
     # Automatische Erkennung der relevanten Spalten
     detected_columns = detect_columns(df)
 
+    # Überprüfen, ob die notwendigen Spalten erkannt wurden
     if detected_columns['name'] is not None and detected_columns['birthdate'] is not None:
         st.success(f"Gefundene Spalten: Name = {detected_columns['name']}, Geburtsdatum = {detected_columns['birthdate']}")
         
-        # Outlook-kompatible CSV erstellen
-        outlook_df = process_data(df, detected_columns)
-
-        st.write('Outlook-kompatible CSV-Daten:')
-        st.write(outlook_df)
-
-        # Datei zum Download anbieten
-        csv = outlook_df.to_csv(index=False)
-        st.download_button(
-            label='Download Outlook CSV',
-            data=csv,
-            file_name='outlook_birthdays.csv',
-            mime='text/csv'
-        )
+        try:
+            # Outlook-kompatible CSV erstellen
+            outlook_df = process_data(df, detected_columns)
+    
+            st.write('Outlook-kompatible CSV-Daten:')
+            st.write(outlook_df)
+    
+            # Datei zum Download anbieten
+            csv = outlook_df.to_csv(index=False)
+            st.download_button(
+                label='Download Outlook CSV',
+                data=csv,
+                file_name='outlook_birthdays.csv',
+                mime='text/csv'
+            )
+        except KeyError as e:
+            st.error(f"Ein Fehler ist aufgetreten: {e}. Bitte überprüfen Sie die Spaltennamen in Ihrer Datei.")
     else:
         st.error('Die notwendigen Spalten konnten nicht automatisch erkannt werden. Bitte stellen Sie sicher, dass Vor- und Nachname sowie Geburtsdatum in der Datei enthalten sind.')
+
 
 
