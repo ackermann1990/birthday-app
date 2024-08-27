@@ -3,12 +3,17 @@ import pandas as pd
 from datetime import datetime
 import re
 
+# Funktion zur Bereinigung von Spaltennamen
+def clean_column_names(columns):
+    cleaned_columns = columns.str.strip().str.replace(r'[^\w\s]', '', regex=True).str.replace(' ', '_')
+    return cleaned_columns
+
 # Funktion zur Erkennung von Vorname, Nachname und Geburtsdatum
 def detect_columns(data):
-    columns = data.columns.str.lower()
+    cleaned_columns = clean_column_names(data.columns)
     
-    name_columns = [col for col in columns if re.search(r'vorname|nachname|name', col)]
-    birthdate_columns = [col for col in columns if re.search(r'geburt|birth', col)]
+    name_columns = [col for col in cleaned_columns if re.search(r'vorname|nachname|name', col)]
+    birthdate_columns = [col for col in cleaned_columns if re.search(r'geburt|birth', col)]
     
     detected = {
         'name': None,
@@ -29,6 +34,9 @@ def detect_columns(data):
 
 # Funktion zur Verarbeitung der Daten
 def process_data(data, columns):
+    # Bereinigen der Spaltennamen
+    data.columns = clean_column_names(data.columns)
+    
     # Debugging-Ausgabe
     st.write("Erkannte Spalten für Namen:", columns['name'])
     st.write("Erkannte Spalte für Geburtsdatum:", columns['birthdate'])
@@ -103,6 +111,3 @@ if uploaded_file is not None:
             st.error('Die notwendigen Spalten konnten nicht automatisch erkannt werden. Bitte stellen Sie sicher, dass Vor- und Nachname sowie Geburtsdatum in der Datei enthalten sind.')
     except Exception as e:
         st.error(f"Ein Fehler ist beim Laden der Datei aufgetreten: {e}")
-
-
-
