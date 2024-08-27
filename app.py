@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
-from icalendar import Calendar, Event
-from datetime import datetime
+from icalendar import Calendar, Event, Alarm
+from datetime import datetime, timedelta
 from io import BytesIO
 
 # Titel der App
@@ -21,11 +21,21 @@ if st.button('Geburtstagsdaten aktualisieren und ICS-Datei generieren'):
         cal = Calendar()
 
         for kontakt in kontakte_liste:
+            # Setze das Datum und die Uhrzeit auf 8:00 Uhr am Geburtstag
+            geburtsdatum = datetime.strptime(kontakt['geburtsdatum'], '%Y-%m-%d').replace(hour=8, minute=0)
+
             event = Event()
             event.add('summary', f"Geburtstag von {kontakt['name']}")
-            event.add('dtstart', datetime.strptime(kontakt['geburtsdatum'], '%Y-%m-%d'))
+            event.add('dtstart', geburtsdatum)
             event.add('description', f"Kontaktdetails: {kontakt['email']}, {kontakt['telefonnummer']}")
             event.add('rrule', {'freq': 'yearly'})
+
+            # Erinnerung am selben Tag um 8:00 Uhr hinzufügen
+            alarm = Alarm()
+            alarm.add('action', 'DISPLAY')
+            alarm.add('description', f"Erinnerung: Geburtstag von {kontakt['name']} heute")
+            alarm.add('trigger', geburtsdatum)  # Erinnerung um 8:00 Uhr am Geburtstag
+            event.add_component(alarm)
 
             cal.add_component(event)
 
