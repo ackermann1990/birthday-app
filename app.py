@@ -61,38 +61,48 @@ st.title('Outlook-Geburtstagserinnerung Webapp')
 uploaded_file = st.file_uploader('Laden Sie Ihre CSV-Datei mit Kundendaten hoch', type='csv')
 
 if uploaded_file is not None:
+    # Option zum Auswählen des Trennzeichens
+    delimiter = st.radio(
+        "Wählen Sie das Trennzeichen Ihrer CSV-Datei aus",
+        options=[',', ';', '\t'],
+        index=0
+    )
+    
     # CSV-Datei in DataFrame laden
-    df = pd.read_csv(uploaded_file)
+    try:
+        df = pd.read_csv(uploaded_file, delimiter=delimiter)
 
-    st.write('Original CSV-Daten:')
-    st.write(df)
+        st.write('Original CSV-Daten:')
+        st.write(df)
 
-    # Automatische Erkennung der relevanten Spalten
-    detected_columns = detect_columns(df)
+        # Automatische Erkennung der relevanten Spalten
+        detected_columns = detect_columns(df)
 
-    # Überprüfen, ob die notwendigen Spalten erkannt wurden
-    if detected_columns['name'] is not None and detected_columns['birthdate'] is not None:
-        st.success(f"Gefundene Spalten: Name = {detected_columns['name']}, Geburtsdatum = {detected_columns['birthdate']}")
+        # Überprüfen, ob die notwendigen Spalten erkannt wurden
+        if detected_columns['name'] is not None and detected_columns['birthdate'] is not None:
+            st.success(f"Gefundene Spalten: Name = {detected_columns['name']}, Geburtsdatum = {detected_columns['birthdate']}")
+            
+            try:
+                # Outlook-kompatible CSV erstellen
+                outlook_df = process_data(df, detected_columns)
         
-        try:
-            # Outlook-kompatible CSV erstellen
-            outlook_df = process_data(df, detected_columns)
-    
-            st.write('Outlook-kompatible CSV-Daten:')
-            st.write(outlook_df)
-    
-            # Datei zum Download anbieten
-            csv = outlook_df.to_csv(index=False)
-            st.download_button(
-                label='Download Outlook CSV',
-                data=csv,
-                file_name='outlook_birthdays.csv',
-                mime='text/csv'
-            )
-        except KeyError as e:
-            st.error(f"Ein Fehler ist aufgetreten: {e}. Bitte überprüfen Sie die Spaltennamen in Ihrer Datei.")
-    else:
-        st.error('Die notwendigen Spalten konnten nicht automatisch erkannt werden. Bitte stellen Sie sicher, dass Vor- und Nachname sowie Geburtsdatum in der Datei enthalten sind.')
+                st.write('Outlook-kompatible CSV-Daten:')
+                st.write(outlook_df)
+        
+                # Datei zum Download anbieten
+                csv = outlook_df.to_csv(index=False)
+                st.download_button(
+                    label='Download Outlook CSV',
+                    data=csv,
+                    file_name='outlook_birthdays.csv',
+                    mime='text/csv'
+                )
+            except KeyError as e:
+                st.error(f"Ein Fehler ist aufgetreten: {e}. Bitte überprüfen Sie die Spaltennamen in Ihrer Datei.")
+        else:
+            st.error('Die notwendigen Spalten konnten nicht automatisch erkannt werden. Bitte stellen Sie sicher, dass Vor- und Nachname sowie Geburtsdatum in der Datei enthalten sind.')
+    except Exception as e:
+        st.error(f"Ein Fehler ist beim Laden der Datei aufgetreten: {e}")
 
 
 
