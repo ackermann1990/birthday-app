@@ -16,16 +16,18 @@ def create_ics_file(df):
         full_name = f"{row['Vorname']} {row['Name']}"
         event.name = f"Geburtstag: {full_name}"
         
-        # Setzt das Startdatum des Events auf den Geburtstag mit Zeitzone
+        # Setzt das Startdatum des Events auf den Geburtstag
         geburtstag = datetime.strptime(row['Geburtsdatum'], '%d.%m.%Y')
-        event.begin = geburtstag.replace(hour=8, minute=0)
-        event.make_all_day()
-
-        # Zeitzone explizit setzen
-        event.begin = event.begin.astimezone(tz=None)  # Nimmt die lokale Zeitzone des Geräts
-
+        current_year_birthday = geburtstag.replace(year=datetime.now().year)
+        
+        event.begin = current_year_birthday
+        event.make_all_day()  # Als ganztägiges Ereignis
+        
+        # Jährlich wiederkehrend
+        event.recurrence = 'YEARLY'
+        
         # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
-        alarm = DisplayAlarm(trigger=timedelta(hours=0))
+        alarm = DisplayAlarm(trigger=timedelta(hours=-8))
         event.alarms.append(alarm)
         
         # Adresse und Kontaktlink
