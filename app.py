@@ -1,52 +1,58 @@
 import streamlit as st
-import requests
-from icalendar import Calendar, Event, Alarm
+import pandas as pd
+from ics import Calendar, Event
 from datetime import datetime, timedelta
-from io import BytesIO
+from urllib.parse import quote
 
-# Titel der App
-st.title("Kunden Geburtstags-ICS Datei Generator")
+# Funktion, um einen WhatsApp-Link zu generieren
+def generate_whatsapp_link(phone_number):
+    return f"https://wa.me/{phone_number}"
 
-# Button zur Auslösung des Prozesses
-if st.button('Geburtstagsdaten aktualisieren und ICS-Datei generieren'):
-    # Beispiel-API-URL und Header (passen Sie diese an Ihre API an)
-    api_url = "https://api.tarif590.ch/kunden"  # Beispiel-URL
-    headers = {"Authorization": "Bearer YOUR_API_TOKEN"}  # Ersetzen Sie dies mit Ihrem API-Token
-    response = requests.get(api_url, headers=headers)
+# Funktion, um die ICS-Datei zu erstellen
+def create_ics_file(df):
+    calendar = Calendar()
     
-    if response.status_code == 200:
-        kontakte_liste = response.json()  # Annahme: JSON-Antwort mit den Kundendaten
+    for index, row in df.iterrows():
+        event = Event()
+        event.name = f"Geburtstag: {row['Name']}"
         
-        # ICS Datei erstellen
-        cal = Calendar()
+        # Setzt das Startdatum des Events auf den Geburtstag
+        event.begin = datetime.strptime(row['Geburtstag'], '%Y-%m-%d').replace(hour=8, minute=0)
+        event.make_all_day()
+        
+        # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
+        event.alarms.append(f'-PT0H0M')
+        
+        # Fügt Adresse und Kontaktlink hinzu
+        contact_info = f"Adresse: {row['Adresse']}\n"
+        if pd.notna(row['Mobilnummer']):
+            contact_info += f"WhatsApp: {generate_whatsapp_link(row['Mobilnummer'])}"
+        elif pd.notna(row['E-Mail']):
+            contact_info += f"E-Mail: {row['E-Mail']}"
+        
+        event.description = contact_info
+        
+        calendar.events.add(event)
+    
+    return calendar
 
-        for kontakt in kontakte_liste:
-            # Setze das Datum und die Uhrzeit auf 8:00 Uhr am Geburtstag
-            geburtsdatum = datetime.strptime(kontakt['geburtsdatum'], '%Y-%m-%d').replace(hour=8, minute=0)
+# Streamlit-App
+st.title('Geburtstags-ICS-Datei Generator')
 
-            event = Event()
-            event.add('summary', f"Geburtstag von {kontakt['name']}")
-            event.add('dtstart', geburtsdatum)
-            event.add('description', f"Kontaktdetails: {kontakt['email']}, {kontakt['telefonnummer']}")
-            event.add('rrule', {'freq': 'yearly'})
+uploaded_file = st.file_uploader("Laden Sie Ihre CSV-Datei hoch", type=["csv"])
 
-            # Erinnerung am selben Tag um 8:00 Uhr hinzufügen
-            alarm = Alarm()
-            alarm.add('action', 'DISPLAY')
-            alarm.add('description', f"Erinnerung: Geburtstag von {kontakt['name']} heute")
-            alarm.add('trigger', geburtsdatum)  # Erinnerung um 8:00 Uhr am Geburtstag
-            event.add_component(alarm)
-
-            cal.add_component(event)
-
-        # ICS-Datei als Download bereitstellen
-        ics_file = BytesIO(cal.to_ical())
-        ics_file_name = "geburtstage.ics"
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.write("Ihre hochgeladene CSV-Datei:")
+    st.dataframe(df)
+    
+    if st.button('ICS-Datei generieren'):
+        calendar = create_ics_file(df)
+        ics_content = str(calendar)
+        
         st.download_button(
             label="ICS-Datei herunterladen",
-            data=ics_file,
-            file_name=ics_file_name,
-            mime="text/calendar"
+            data=ics_content,
+            file_name='geburtstage.ics',
+            mime='text/calendar'
         )
-    else:
-        st.error(f"API Anfrage fehlgeschlagen: {response.status_code}")
