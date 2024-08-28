@@ -1,3 +1,4 @@
 streamlit
 icalendar
 requests
+pip install ics
