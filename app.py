@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-from ics import Calendar, Event
-from datetime import datetime
-from urllib.parse import quote
+from ics import Calendar, Event, DisplayAlarm
+from datetime import datetime, timedelta
 
 # Funktion, um einen WhatsApp-Link zu generieren
 def generate_whatsapp_link(phone_number):
@@ -17,13 +16,17 @@ def create_ics_file(df):
         full_name = f"{row['Vorname']} {row['Name']}"
         event.name = f"Geburtstag: {full_name}"
         
-        # Setzt das Startdatum des Events auf den Geburtstag
+        # Setzt das Startdatum des Events auf den Geburtstag mit Zeitzone
         geburtstag = datetime.strptime(row['Geburtsdatum'], '%d.%m.%Y')
         event.begin = geburtstag.replace(hour=8, minute=0)
         event.make_all_day()
-        
+
+        # Zeitzone explizit setzen
+        event.begin = event.begin.astimezone(tz=None)  # Nimmt die lokale Zeitzone des Geräts
+
         # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
-        event.alarms.append('-PT0H0M')
+        alarm = DisplayAlarm(trigger=timedelta(hours=0))
+        event.alarms.append(alarm)
         
         # Adresse und Kontaktlink
         address = f"{row['PLZ']} {row['Ort']}"
