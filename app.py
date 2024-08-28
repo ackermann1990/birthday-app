@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from ics import Calendar, Event
-from datetime import datetime, timedelta
+from datetime import datetime
 from urllib.parse import quote
 
 # Funktion, um einen WhatsApp-Link zu generieren
@@ -14,21 +14,25 @@ def create_ics_file(df):
     
     for index, row in df.iterrows():
         event = Event()
-        event.name = f"Geburtstag: {row['Name']}"
+        full_name = f"{row['Vorname']} {row['Name']}"
+        event.name = f"Geburtstag: {full_name}"
         
         # Setzt das Startdatum des Events auf den Geburtstag
-        event.begin = datetime.strptime(row['Geburtstag'], '%Y-%m-%d').replace(hour=8, minute=0)
+        geburtstag = datetime.strptime(row['Geburtsdatum'], '%d.%m.%Y')
+        event.begin = geburtstag.replace(hour=8, minute=0)
         event.make_all_day()
         
         # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
-        event.alarms.append(f'-PT0H0M')
+        event.alarms.append('-PT0H0M')
         
-        # Fügt Adresse und Kontaktlink hinzu
-        contact_info = f"Adresse: {row['Adresse']}\n"
+        # Adresse und Kontaktlink
+        address = f"{row['PLZ']} {row['Ort']}"
+        contact_info = f"Adresse: {address}\n"
+        
         if pd.notna(row['Mobilnummer']):
             contact_info += f"WhatsApp: {generate_whatsapp_link(row['Mobilnummer'])}"
-        elif pd.notna(row['E-Mail']):
-            contact_info += f"E-Mail: {row['E-Mail']}"
+        elif pd.notna(row['Emailadresse']):
+            contact_info += f"E-Mail: {row['Emailadresse']}"
         
         event.description = contact_info
         
@@ -42,7 +46,7 @@ st.title('Geburtstags-ICS-Datei Generator')
 uploaded_file = st.file_uploader("Laden Sie Ihre CSV-Datei hoch", type=["csv"])
 
 if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
+    df = pd.read_csv(uploaded_file, sep=';')
     st.write("Ihre hochgeladene CSV-Datei:")
     st.dataframe(df)
     
