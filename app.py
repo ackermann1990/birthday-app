@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from ics import Calendar, Event, DisplayAlarm
 from datetime import datetime, timedelta
+import pytz
 import uuid
 
 # Funktion, um einen WhatsApp-Link zu generieren
@@ -11,6 +12,7 @@ def generate_whatsapp_link(phone_number):
 # Funktion, um die ICS-Datei zu erstellen
 def create_ics_file(df):
     calendar = Calendar()
+    tz = pytz.timezone('Europe/Zurich')  # Zeitzone für die Schweiz
     
     for index, row in df.iterrows():
         event = Event()
@@ -19,7 +21,7 @@ def create_ics_file(df):
         
         # Setzt das Startdatum des Events auf den Geburtstag
         geburtstag = datetime.strptime(row['Geburtsdatum'], '%d.%m.%Y')
-        current_year_birthday = geburtstag.replace(year=datetime.now().year)
+        current_year_birthday = geburtstag.replace(year=datetime.now().year, tzinfo=tz)
         
         event.begin = current_year_birthday
         event.make_all_day()  # Als ganztägiges Ereignis
@@ -28,7 +30,7 @@ def create_ics_file(df):
         event.recurrence = 'YEARLY'
         
         # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
-        alarm = DisplayAlarm(trigger=timedelta(hours=-8))
+        alarm = DisplayAlarm(trigger=timedelta(hours=-16))  # 16 Stunden vorher für 08:00 Uhr Erinnerung
         event.alarms.append(alarm)
         
         # Adresse und Kontaktlink
@@ -36,15 +38,16 @@ def create_ics_file(df):
         contact_info = f"Adresse: {address}\n"
         
         if pd.notna(row['Mobilnummer']):
-            contact_info += f"WhatsApp: {generate_whatsapp_link(row['Mobilnummer'])}"
-        elif pd.notna(row['Emailadresse']):
+            contact_info += f"WhatsApp: {generate_whatsapp_link(row['Mobilnummer'])}\n"
+        
+        if pd.notna(row['Emailadresse']):
             contact_info += f"E-Mail: {row['Emailadresse']}"
         
         event.description = contact_info
         
         # UID und DTSTAMP hinzufügen
         event.uid = str(uuid.uuid4())  # Generiert eine eindeutige UID
-        event.dtstamp = datetime.now()  # Setzt den Zeitstempel auf die aktuelle Zeit
+        event.dtstamp = datetime.now(tz)  # Setzt den Zeitstempel auf die aktuelle Zeit
         
         calendar.events.add(event)
     
