@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from ics import Calendar, Event, DisplayAlarm
 from datetime import datetime, timedelta
+import uuid
 
 # Funktion, um einen WhatsApp-Link zu generieren
 def generate_whatsapp_link(phone_number):
@@ -40,6 +41,10 @@ def create_ics_file(df):
             contact_info += f"E-Mail: {row['Emailadresse']}"
         
         event.description = contact_info
+        
+        # UID und DTSTAMP hinzufügen
+        event.uid = str(uuid.uuid4())  # Generiert eine eindeutige UID
+        event.dtstamp = datetime.now()  # Setzt den Zeitstempel auf die aktuelle Zeit
         
         calendar.events.add(event)
     
