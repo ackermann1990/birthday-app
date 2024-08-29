@@ -25,9 +25,6 @@ def create_ics_file(df):
         event.begin = geburtstag
         event.make_all_day()  # Als ganztägiges Ereignis
         
-        # Fügt die Wiederholungsregel manuell hinzu
-        event.extra.append("RRULE:FREQ=YEARLY")
-        
         # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
         alarm = DisplayAlarm(trigger=timedelta(hours=8))  # 08:00 Uhr am Ereignistag
         event.alarms.append(alarm)
@@ -50,7 +47,17 @@ def create_ics_file(df):
         
         calendar.events.add(event)
     
-    return calendar
+    # Serialisiere den Kalender zu einem String und füge die RRULE hinzu
+    ics_content = str(calendar)
+    
+    # Füge die RRULE für jedes Event manuell hinzu
+    ics_lines = []
+    for line in ics_content.splitlines():
+        ics_lines.append(line)
+        if line.startswith("BEGIN:VEVENT"):
+            ics_lines.append("RRULE:FREQ=YEARLY")
+    
+    return "\n".join(ics_lines)
 
 # Streamlit-App
 st.title('Geburtstags-ICS-Datei Generator')
@@ -63,8 +70,7 @@ if uploaded_file is not None:
     st.dataframe(df)
     
     if st.button('ICS-Datei generieren'):
-        calendar = create_ics_file(df)
-        ics_content = str(calendar)
+        ics_content = create_ics_file(df)
         
         st.download_button(
             label="ICS-Datei herunterladen",
