@@ -38,9 +38,6 @@ def create_ics_file(df):
         event.begin = geburtstag
         event.make_all_day()  # Als ganztägiges Ereignis
         
-        # Fügt die Wiederholungsregel manuell hinzu
-        event.extra.append("RRULE:FREQ=YEARLY")
-        
         # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
         alarm = DisplayAlarm(trigger=timedelta(hours=8))  # 08:00 Uhr am Ereignistag
         event.alarms.append(alarm)
@@ -65,7 +62,7 @@ def create_ics_file(df):
         
         calendar.events.add(event)
     
-    # Serialisiere den Kalender zu einem String und füge die RRULE hinzu
+    # Serialisiere den Kalender zu einem String
     ics_content = str(calendar)
     
     # Füge die RRULE für jedes Event manuell hinzu
