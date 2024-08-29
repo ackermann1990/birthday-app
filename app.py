@@ -26,7 +26,7 @@ def create_ics_file(df):
         event.make_all_day()  # Als ganztägiges Ereignis
         
         # Jährlich wiederkehrend - korrekter Format für iPhone
-        event.extra.append('RRULE:FREQ=YEARLY')
+        event.extra['RRULE'] = 'FREQ=YEARLY'
         
         # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
         alarm = DisplayAlarm(trigger=timedelta(hours=8))  # 08:00 Uhr am Ereignistag
