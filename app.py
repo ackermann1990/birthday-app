@@ -15,7 +15,7 @@ def create_ics_file(df):
     
     for index, row in df.iterrows():
         event = Event()
-        full_name = f"{row['Vorname']} {row['Name']}"
+        full_name = f"{row['Vorname']} {row['Nachname']}"
         event.name = f"Geburtstag: {full_name}"
         
         # Setzt das Startdatum des Events auf den Geburtstag im aktuellen Jahr
@@ -25,19 +25,24 @@ def create_ics_file(df):
         event.begin = geburtstag
         event.make_all_day()  # Als ganztägiges Ereignis
         
+        # Fügt die Wiederholungsregel manuell hinzu
+        event.extra.append("RRULE:FREQ=YEARLY")
+        
         # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
         alarm = DisplayAlarm(trigger=timedelta(hours=8))  # 08:00 Uhr am Ereignistag
         event.alarms.append(alarm)
         
-        # Adresse und Kontaktlink
-        address = f"{row['PLZ']} {row['Ort']}"
-        contact_info = f"Adresse: {address}\n"
+        # Kontaktinformationen und Adresse formatieren
+        contact_info = ""
         
-        if pd.notna(row['Mobilnummer']):
-            contact_info += f"WhatsApp: {generate_whatsapp_link(row['Mobilnummer'])}\n"
+        if pd.notna(row['Tel M']):
+            contact_info += f"WhatsApp: {generate_whatsapp_link(row['Tel M'])}\n\n"
         
-        if pd.notna(row['Emailadresse']):
-            contact_info += f"E-Mail: {row['Emailadresse']}"
+        if pd.notna(row['Email']):
+            contact_info += f"E-Mail: {row['Email']}\n\n"
+        
+        address = f"{row['Strasse']}, {row['Adresszeile 1']} {row['Adresszeile 2']}".strip()
+        contact_info += f"{address}\n{row['PLZ']} {row['Ort']}"
         
         event.description = contact_info
         
@@ -62,11 +67,11 @@ def create_ics_file(df):
 # Streamlit-App
 st.title('Geburtstags-ICS-Datei Generator')
 
-uploaded_file = st.file_uploader("Laden Sie Ihre CSV-Datei hoch", type=["csv"])
+uploaded_file = st.file_uploader("Laden Sie Ihre Excel-Datei hoch", type=["xls", "xlsx"])
 
 if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file, sep=';')
-    st.write("Ihre hochgeladene CSV-Datei:")
+    df = pd.read_excel(uploaded_file)
+    st.write("Ihre hochgeladene Excel-Datei:")
     st.dataframe(df)
     
     if st.button('ICS-Datei generieren'):
