@@ -2,4 +2,4 @@ streamlit
 icalendar
 requests
 ics
-pip install xlrd
+xlrd
