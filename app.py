@@ -8,6 +8,15 @@ import uuid
 def generate_whatsapp_link(phone_number):
     return f"https://wa.me/{phone_number}"
 
+# Funktion, um das Geburtsdatum zu verarbeiten
+def parse_date(date_str):
+    for fmt in ('%d.%m.%Y', '%Y-%m-%d', '%m/%d/%Y'):
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
+    raise ValueError(f"Unbekanntes Datumsformat: {date_str}")
+
 # Funktion, um die ICS-Datei zu erstellen
 def create_ics_file(df):
     calendar = Calendar()
@@ -18,8 +27,12 @@ def create_ics_file(df):
         full_name = f"{row['Vorname']} {row['Nachname']}"
         event.name = f"Geburtstag: {full_name}"
         
-        # Setzt das Startdatum des Events auf den Geburtstag im aktuellen Jahr
-        geburtstag = datetime.strptime(row['Geburtsdatum'], '%d.%m.%Y')
+        # Verarbeite das Geburtsdatum
+        if isinstance(row['Geburtsdatum'], datetime):
+            geburtstag = row['Geburtsdatum']
+        else:
+            geburtstag = parse_date(str(row['Geburtsdatum']))
+        
         geburtstag = geburtstag.replace(year=current_year)
         
         event.begin = geburtstag
