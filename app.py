@@ -67,7 +67,7 @@ def create_ics_file(df):
 # Streamlit-App
 st.title('Geburtstags-ICS-Datei Generator')
 
-uploaded_file = st.file_uploader("Laden Sie Ihre Excel-Datei hoch", type=["xls", "xlsx"])
+uploaded_file = st.file_uploader("Laden Sie Ihre Excel-Datei hoch", type=["xls"])
 
 if uploaded_file is not None:
     df = pd.read_excel(uploaded_file)
