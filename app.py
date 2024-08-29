@@ -30,7 +30,7 @@ def create_ics_file(df):
         event.recurrence = 'YEARLY'
         
         # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
-        alarm = DisplayAlarm(trigger=timedelta(hours=-16))  # 16 Stunden vorher für 08:00 Uhr Erinnerung
+        alarm = DisplayAlarm(trigger=timedelta(hours=8))  # 8 Stunden nach Mitternacht (08:00 Uhr am Ereignistag)
         event.alarms.append(alarm)
         
         # Adresse und Kontaktlink
