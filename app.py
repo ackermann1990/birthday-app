@@ -12,25 +12,24 @@ def generate_whatsapp_link(phone_number):
 # Funktion, um die ICS-Datei zu erstellen
 def create_ics_file(df):
     calendar = Calendar()
-    tz = pytz.timezone('Europe/Zurich')  # Zeitzone für die Schweiz
     
     for index, row in df.iterrows():
         event = Event()
         full_name = f"{row['Vorname']} {row['Name']}"
         event.name = f"Geburtstag: {full_name}"
         
-        # Setzt das Startdatum des Events auf den Geburtstag
+        # Setzt das Startdatum des Events auf den Geburtstag, ohne Zeitzone, um Verschiebungen zu vermeiden
         geburtstag = datetime.strptime(row['Geburtsdatum'], '%d.%m.%Y')
-        current_year_birthday = geburtstag.replace(year=datetime.now().year, tzinfo=tz)
         
-        event.begin = current_year_birthday
-        event.make_all_day()  # Als ganztägiges Ereignis
-
+        # Als ganztägiges Ereignis ohne Zeitzone
+        event.begin = geburtstag
+        event.make_all_day()
+        
         # Jährlich wiederkehrend
         event.recurrence = 'FREQ=YEARLY'
         
         # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
-        alarm = DisplayAlarm(trigger=timedelta(hours=8))  # 8 Stunden nach Mitternacht (08:00 Uhr am Ereignistag)
+        alarm = DisplayAlarm(trigger=timedelta(hours=8))  # 08:00 Uhr am Ereignistag
         event.alarms.append(alarm)
         
         # Adresse und Kontaktlink
@@ -47,7 +46,7 @@ def create_ics_file(df):
         
         # UID und DTSTAMP hinzufügen
         event.uid = str(uuid.uuid4())  # Generiert eine eindeutige UID
-        event.dtstamp = datetime.now(tz)  # Setzt den Zeitstempel auf die aktuelle Zeit
+        event.dtstamp = datetime.now()  # Setzt den Zeitstempel auf die aktuelle Zeit
         
         calendar.events.add(event)
     
