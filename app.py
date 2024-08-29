@@ -51,8 +51,14 @@ def create_ics_file(df):
         if pd.notna(row['Email']):
             contact_info += f"E-Mail: {row['Email']}\n\n"
         
-        address = f"{row['Strasse']}, {row['Adresszeile 1']} {row['Adresszeile 2']}".strip()
-        contact_info += f"{address}\n{row['PLZ']} {row['Ort']}"
+        # Adresse zusammensetzen, ignoriert NaN-Werte
+        address = f"{row['Strasse']}"
+        if pd.notna(row['Adresszeile 1']):
+            address += f", {row['Adresszeile 1']}"
+        if pd.notna(row['Adresszeile 2']):
+            address += f" {row['Adresszeile 2']}"
+        
+        contact_info += f"{address.strip()}\n{row['PLZ']} {row['Ort']}"
         
         event.description = contact_info
         
