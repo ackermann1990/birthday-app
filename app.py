@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from ics import Calendar, Event, DisplayAlarm
 from datetime import datetime, timedelta
-import pytz
 import uuid
 
 # Funktion, um einen WhatsApp-Link zu generieren
@@ -12,18 +11,19 @@ def generate_whatsapp_link(phone_number):
 # Funktion, um die ICS-Datei zu erstellen
 def create_ics_file(df):
     calendar = Calendar()
+    current_year = datetime.now().year
     
     for index, row in df.iterrows():
         event = Event()
         full_name = f"{row['Vorname']} {row['Name']}"
         event.name = f"Geburtstag: {full_name}"
         
-        # Setzt das Startdatum des Events auf den Geburtstag, ohne Zeitzone, um Verschiebungen zu vermeiden
+        # Setzt das Startdatum des Events auf den Geburtstag im aktuellen Jahr
         geburtstag = datetime.strptime(row['Geburtsdatum'], '%d.%m.%Y')
+        geburtstag = geburtstag.replace(year=current_year)
         
-        # Als ganztägiges Ereignis ohne Zeitzone
         event.begin = geburtstag
-        event.make_all_day()
+        event.make_all_day()  # Als ganztägiges Ereignis
         
         # Jährlich wiederkehrend
         event.recurrence = 'FREQ=YEARLY'
