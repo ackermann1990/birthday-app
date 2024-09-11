@@ -52,9 +52,16 @@ def create_ics_file(df):
         if pd.notna(row['Email']):
             contact_info += f"E-Mail: {row['Email']}\n\n"
         
-        address = f"{row['StrasseUndNr']}, {row['Adresszeile1']} {row['Adresszeile2']}".strip()
-        contact_info += f"{address}\n{row['PLZ']} {row['Ort']}"
-        
+        # Adresse formatieren und nur gültige Teile einfügen
+        address = row['StrasseUndNr'] if pd.notna(row['StrasseUndNr']) else ""
+        if pd.notna(row['Adresszeile1']):
+            address += f", {row['Adresszeile1']}"
+        if pd.notna(row['Adresszeile2']):
+            address += f" {row['Adresszeile2']}"
+
+        address = address.strip()  # Entferne mögliche führende oder abschließende Leerzeichen
+        contact_info += f"{address}\n{row['PLZ']} {row['Ort']}" if address else f"{row['PLZ']} {row['Ort']}"
+
         event.description = contact_info
         
         # UID und DTSTAMP hinzufügen
