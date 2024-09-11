@@ -3,3 +3,4 @@ icalendar
 requests
 ics
 xlrd
+openpyxl
