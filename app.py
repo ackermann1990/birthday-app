@@ -45,20 +45,15 @@ def create_ics_file(df):
         # Kontaktinformationen und Adresse formatieren
         contact_info = ""
         
-        if pd.notna(row['Tel M']):
-            contact_info += f"WhatsApp: {generate_whatsapp_link(row['Tel M'])}\n\n"
+        # Verwende das neue Feld 6 als Mobilnummer für WhatsApp
+        if pd.notna(row['Feld6']):
+            contact_info += f"WhatsApp: {generate_whatsapp_link(row['Feld6'])}\n\n"
         
         if pd.notna(row['Email']):
             contact_info += f"E-Mail: {row['Email']}\n\n"
         
-        # Adresse zusammensetzen, ignoriert NaN-Werte
-        address = f"{row['Strasse']}"
-        if pd.notna(row['Adresszeile 1']):
-            address += f", {row['Adresszeile 1']}"
-        if pd.notna(row['Adresszeile 2']):
-            address += f" {row['Adresszeile 2']}"
-        
-        contact_info += f"{address.strip()}\n{row['PLZ']} {row['Ort']}"
+        address = f"{row['StrasseUndNr']}, {row['Adresszeile1']} {row['Adresszeile2']}".strip()
+        contact_info += f"{address}\n{row['PLZ']} {row['Ort']}"
         
         event.description = contact_info
         
@@ -83,7 +78,7 @@ def create_ics_file(df):
 # Streamlit-App
 st.title('Geburtstags-ICS-Datei Generator')
 
-uploaded_file = st.file_uploader("Laden Sie Ihre Excel-Datei hoch", type=["xls"])
+uploaded_file = st.file_uploader("Laden Sie Ihre Excel-Datei hoch", type=["xls", "xlsx"])
 
 if uploaded_file is not None:
     df = pd.read_excel(uploaded_file)
