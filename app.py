@@ -10,12 +10,8 @@ def generate_whatsapp_link(phone_number):
 
 # Funktion, um das Geburtsdatum zu verarbeiten
 def parse_date(date_str):
-    for fmt in ('%d.%m.%Y', '%Y-%m-%d', '%m/%d/%Y'):
-        try:
-            return datetime.strptime(date_str, fmt)
-        except ValueError:
-            continue
-    raise ValueError(f"Unbekanntes Datumsformat: {date_str}")
+    # Entferne den Zeitanteil und verarbeite nur das Datum (JJJJ-MM-TT)
+    return datetime.strptime(date_str.split()[0], '%Y-%m-%d')
 
 # Funktion, um die ICS-Datei zu erstellen
 def create_ics_file(df):
@@ -27,7 +23,7 @@ def create_ics_file(df):
         full_name = f"{row['Vorname']} {row['Nachname']}"
         event.name = f"Geburtstag: {full_name}"
         
-        # Verarbeite das Geburtsdatum
+        # Verarbeite das Geburtsdatum (Zeit ignorieren)
         if isinstance(row['Geburtsdatum'], datetime):
             geburtstag = row['Geburtsdatum']
         else:
