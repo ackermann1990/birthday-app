@@ -9,9 +9,15 @@ def generate_whatsapp_link(phone_number):
     return f"https://wa.me/{phone_number}"
 
 # Funktion, um das Geburtsdatum zu verarbeiten
-def parse_date(date_str):
-    # Entferne den Zeitanteil und verarbeite nur das Datum (JJJJ-MM-TT)
-    return datetime.strptime(date_str.split()[0], '%Y-%m-%d')
+def parse_date(date_value):
+    if isinstance(date_value, datetime):
+        # Falls das Datum bereits als datetime-Objekt vorliegt, direkt zurückgeben
+        return date_value
+    try:
+        # Entferne den Zeitanteil (falls vorhanden) und verarbeite nur das Datum
+        return datetime.strptime(str(date_value).split()[0], '%Y-%m-%d')
+    except ValueError:
+        raise ValueError(f"Unbekanntes Datumsformat: {date_value}")
 
 # Funktion, um die ICS-Datei zu erstellen
 def create_ics_file(df):
@@ -23,13 +29,9 @@ def create_ics_file(df):
         full_name = f"{row['Vorname']} {row['Nachname']}"
         event.name = f"Geburtstag: {full_name}"
         
-        # Verarbeite das Geburtsdatum (Zeit ignorieren)
-        if isinstance(row['Geburtsdatum'], datetime):
-            geburtstag = row['Geburtsdatum']
-        else:
-            geburtstag = parse_date(str(row['Geburtsdatum']))
-        
-        geburtstag = geburtstag.replace(year=current_year)
+        # Verarbeite das Geburtsdatum
+        geburtstag = parse_date(row['Geburtsdatum'])
+        geburtstag = geburtstag.replace(year=current_year)  # Setze das Jahr auf das aktuelle Jahr
         
         event.begin = geburtstag
         event.make_all_day()  # Als ganztägiges Ereignis
