@@ -10,6 +10,9 @@ def generate_whatsapp_link(phone_number):
 
 # Funktion, um das Geburtsdatum zu verarbeiten
 def parse_date(date_value):
+    if pd.isna(date_value) or date_value == '':
+        # Wenn das Datum leer ist, None zurückgeben
+        return None
     if isinstance(date_value, datetime):
         # Falls das Datum bereits als datetime-Objekt vorliegt, direkt zurückgeben
         return date_value
@@ -32,7 +35,7 @@ def create_ics_file(df):
         # Verarbeite das Geburtsdatum
         geburtstag = parse_date(row['Geburtsdatum'])
         if not geburtstag:
-            # Wenn das Geburtsdatum nicht verarbeitet werden kann, überspringe diesen Eintrag
+            # Wenn das Geburtsdatum leer oder ungültig ist, überspringe diesen Eintrag
             continue
         
         geburtstag = geburtstag.replace(year=current_year)  # Setze das Jahr auf das aktuelle Jahr
