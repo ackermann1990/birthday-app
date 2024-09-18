@@ -17,7 +17,7 @@ def parse_date(date_value):
         # Entferne den Zeitanteil (falls vorhanden) und verarbeite nur das Datum
         return datetime.strptime(str(date_value).split()[0], '%Y-%m-%d')
     except ValueError:
-        raise ValueError(f"Unbekanntes Datumsformat: {date_value}")
+        return None  # Geburtsdatum ist ungültig, None zurückgeben
 
 # Funktion, um die ICS-Datei zu erstellen
 def create_ics_file(df):
@@ -31,6 +31,10 @@ def create_ics_file(df):
         
         # Verarbeite das Geburtsdatum
         geburtstag = parse_date(row['Geburtsdatum'])
+        if not geburtstag:
+            # Wenn das Geburtsdatum nicht verarbeitet werden kann, überspringe diesen Eintrag
+            continue
+        
         geburtstag = geburtstag.replace(year=current_year)  # Setze das Jahr auf das aktuelle Jahr
         
         event.begin = geburtstag
