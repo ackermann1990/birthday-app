@@ -43,8 +43,8 @@ def create_ics_file(df):
         event.begin = geburtstag
         event.make_all_day()  # Als ganztägiges Ereignis
         
-        # Fügt eine Erinnerung um 08:00 Uhr am Geburtstag hinzu
-        alarm = DisplayAlarm(trigger=timedelta(hours=8))  # 08:00 Uhr am Ereignistag
+        # Fügt eine Erinnerung um 09:00 Uhr am Geburtstag hinzu (statt 08:00 Uhr)
+        alarm = DisplayAlarm(trigger=timedelta(hours=9))  # 09:00 Uhr am Ereignistag
         event.alarms.append(alarm)
         
         # Kontaktinformationen und Adresse formatieren
