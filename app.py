@@ -11,14 +11,12 @@ def generate_whatsapp_link(phone_number):
 # Funktion, um das Geburtsdatum zu verarbeiten
 def parse_date(date_value):
     if pd.isna(date_value) or date_value == '':
-        st.write(f"Kein gültiges Geburtsdatum: {date_value}")
         return None
     if isinstance(date_value, datetime):
         return date_value
     try:
         return datetime.strptime(str(date_value).split()[0], '%Y-%m-%d')
     except ValueError:
-        st.write(f"Fehler beim Verarbeiten des Geburtsdatums: {date_value}")
         return None
 
 # Funktion, um das Alter zu berechnen
@@ -43,10 +41,7 @@ def create_ics_file(df):
         geburtstag_in_current_year = geburtstag.replace(year=current_year)
         age = calculate_age(geburtstag)
         
-        # Debug-Ausgabe, um sicherzustellen, dass das Geburtsdatum und Alter korrekt verarbeitet werden
-        st.write(f"Verarbeite: {full_name}, Geburtsdatum: {geburtstag}, Alter: {age}")
-        
-        event.name = f"Geburtstag: {full_name}"  # Alternativ: f"Geburtstag: {full_name} ({age} Jahre)"
+        event.name = f"Geburtstag: {full_name}"
         
         event.begin = geburtstag_in_current_year
         event.make_all_day()  # Als ganztägiges Ereignis
