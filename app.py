@@ -22,7 +22,9 @@ def parse_date(date_value):
 # Funktion, um das Alter zu berechnen
 def calculate_age(birthdate):
     today = datetime.now()
-    return today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
+    # Berechnung des Alters basierend auf dem heutigen Datum und dem Geburtsdatum
+    age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
+    return age
 
 # Funktion, um die ICS-Datei zu erstellen
 def create_ics_file(df):
@@ -39,7 +41,7 @@ def create_ics_file(df):
             continue  # Überspringe diesen Eintrag, falls das Geburtsdatum ungültig ist
         
         geburtstag_in_current_year = geburtstag.replace(year=current_year)
-        age = calculate_age(geburtstag)
+        age = calculate_age(geburtstag)  # Berechne das aktuelle Alter
         
         event.name = f"Geburtstag: {full_name}"
         
@@ -68,7 +70,7 @@ def create_ics_file(df):
         address = address.strip()
         contact_info += f"{address}\n{row['PLZ']} {row['Ort']}" if address else f"{row['PLZ']} {row['Ort']}"
 
-        # Geburtsjahr und aktuelles Alter hinzufügen
+        # Geburtsjahr und aktuelles Alter in den Notizen hinzufügen
         contact_info += f"\n\nGeburtsjahr: {geburtstag.year}\nAktuelles Alter: {age} Jahre"
         
         event.description = contact_info
