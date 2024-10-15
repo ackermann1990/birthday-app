@@ -11,16 +11,18 @@ def generate_whatsapp_link(phone_number):
 # Funktion, um das Geburtsdatum zu verarbeiten
 def parse_date(date_value):
     if pd.isna(date_value) or date_value == '':
-        # Wenn das Datum leer ist, None zurückgeben
         return None
     if isinstance(date_value, datetime):
-        # Falls das Datum bereits als datetime-Objekt vorliegt, direkt zurückgeben
         return date_value
     try:
-        # Entferne den Zeitanteil (falls vorhanden) und verarbeite nur das Datum
         return datetime.strptime(str(date_value).split()[0], '%Y-%m-%d')
     except ValueError:
-        return None  # Geburtsdatum ist ungültig, None zurückgeben
+        return None
+
+# Funktion, um das Alter zu berechnen
+def calculate_age(birthdate):
+    today = datetime.now()
+    return today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
 
 # Funktion, um die ICS-Datei zu erstellen
 def create_ics_file(df):
@@ -30,48 +32,50 @@ def create_ics_file(df):
     for index, row in df.iterrows():
         event = Event()
         full_name = f"{row['Vorname']} {row['Nachname']}"
-        event.name = f"Geburtstag: {full_name}"
         
         # Verarbeite das Geburtsdatum
         geburtstag = parse_date(row['Geburtsdatum'])
         if not geburtstag:
-            # Wenn das Geburtsdatum leer oder ungültig ist, überspringe diesen Eintrag
             continue
         
-        geburtstag = geburtstag.replace(year=current_year)  # Setze das Jahr auf das aktuelle Jahr
+        geburtstag_in_current_year = geburtstag.replace(year=current_year)
+        age = calculate_age(geburtstag)
         
-        event.begin = geburtstag
+        event.name = f"Geburtstag: {full_name}"  # Alternativ: f"Geburtstag: {full_name} ({age} Jahre)"
+        
+        event.begin = geburtstag_in_current_year
         event.make_all_day()  # Als ganztägiges Ereignis
         
-        # Fügt eine Erinnerung um 09:00 Uhr am Geburtstag hinzu (statt 08:00 Uhr)
-        alarm = DisplayAlarm(trigger=timedelta(hours=9))  # 09:00 Uhr am Ereignistag
+        # Fügt eine Erinnerung um 09:00 Uhr am Geburtstag hinzu
+        alarm = DisplayAlarm(trigger=timedelta(hours=9))
         event.alarms.append(alarm)
         
         # Kontaktinformationen und Adresse formatieren
         contact_info = ""
         
-        # Verwende das neue Feld 6 als Mobilnummer für WhatsApp
         if pd.notna(row['Feld6']):
             contact_info += f"WhatsApp: {generate_whatsapp_link(row['Feld6'])}\n\n"
         
         if pd.notna(row['Email']):
             contact_info += f"E-Mail: {row['Email']}\n\n"
         
-        # Adresse formatieren und nur gültige Teile einfügen
         address = row['StrasseUndNr'] if pd.notna(row['StrasseUndNr']) else ""
         if pd.notna(row['Adresszeile1']):
             address += f", {row['Adresszeile1']}"
         if pd.notna(row['Adresszeile2']):
             address += f" {row['Adresszeile2']}"
 
-        address = address.strip()  # Entferne mögliche führende oder abschließende Leerzeichen
+        address = address.strip()
         contact_info += f"{address}\n{row['PLZ']} {row['Ort']}" if address else f"{row['PLZ']} {row['Ort']}"
 
+        # Geburtsjahr und aktuelles Alter hinzufügen
+        contact_info += f"\n\nGeburtsjahr: {geburtstag.year}\nAktuelles Alter: {age} Jahre"
+        
         event.description = contact_info
         
         # UID und DTSTAMP hinzufügen
-        event.uid = str(uuid.uuid4())  # Generiert eine eindeutige UID
-        event.dtstamp = datetime.now()  # Setzt den Zeitstempel auf die aktuelle Zeit
+        event.uid = str(uuid.uuid4())
+        event.dtstamp = datetime.now()
         
         calendar.events.add(event)
     
@@ -93,7 +97,6 @@ st.title('Geburtstags-ICS-Datei Generator')
 uploaded_file = st.file_uploader("Laden Sie Ihre Excel-Datei hoch", type=["xlsx"])
 
 if uploaded_file is not None:
-    # Lese die Excel-Datei mit der Engine 'openpyxl' für .xlsx-Dateien
     df = pd.read_excel(uploaded_file, engine='openpyxl')
     st.write("Ihre hochgeladene Excel-Datei:")
     st.dataframe(df)
