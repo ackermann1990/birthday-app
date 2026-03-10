@@ -3,7 +3,27 @@ import pandas as pd
 from datetime import datetime, timedelta
 import uuid
 
-# ... (parse_date, calculate_new_age, generate_whatsapp_link bleiben gleich)
+
+def generate_whatsapp_link(phone_number):
+    return f"https://wa.me/{phone_number}"
+
+
+def parse_date(date_value):
+    if pd.isna(date_value) or date_value == '':
+        return None
+    if isinstance(date_value, datetime):
+        return date_value
+    try:
+        return datetime.strptime(str(date_value).split()[0], '%Y-%m-%d')
+    except ValueError:
+        return None
+
+
+def calculate_new_age(birthdate):
+    today = datetime.now()
+    new_age = today.year - birthdate.year
+    return new_age
+
 
 def create_ics_file(df):
     current_year = datetime.now().year
@@ -22,12 +42,12 @@ def create_ics_file(df):
         geburtstag_in_current_year = geburtstag.replace(year=current_year)
         new_age = calculate_new_age(geburtstag)
 
-        # Kontaktinfos aufbauen (gleiche Logik wie vorher)
         contact_info = ""
         if pd.notna(row['Feld6']):
             contact_info += f"WhatsApp: {generate_whatsapp_link(row['Feld6'])}\\n\\n"
         if pd.notna(row['Email']):
             contact_info += f"E-Mail: {row['Email']}\\n\\n"
+
         address = row['StrasseUndNr'] if pd.notna(row['StrasseUndNr']) else ""
         if pd.notna(row['Adresszeile1']):
             address += f", {row['Adresszeile1']}"
@@ -58,3 +78,24 @@ def create_ics_file(df):
 
     lines.append("END:VCALENDAR")
     return "\n".join(lines)
+
+
+# Streamlit-App
+st.title('Geburtstags-ICS-Datei Generator')
+
+uploaded_file = st.file_uploader("Laden Sie Ihre Excel-Datei hoch", type=["xlsx"])
+
+if uploaded_file is not None:
+    df = pd.read_excel(uploaded_file, engine='openpyxl')
+    st.write("Ihre hochgeladene Excel-Datei:")
+    st.dataframe(df)
+
+    if st.button('ICS-Datei generieren'):
+        ics_content = create_ics_file(df)
+
+        st.download_button(
+            label="ICS-Datei herunterladen",
+            data=ics_content,
+            file_name='geburtstage.ics',
+            mime='text/calendar'
+        )
