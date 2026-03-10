@@ -1,6 +1,5 @@
 streamlit
 icalendar
 requests
-ics
 xlrd
 openpyxl
